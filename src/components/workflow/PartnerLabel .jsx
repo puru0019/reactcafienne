@@ -15,6 +15,7 @@ import { Row, Col, Button } from 'reactstrap';
 import { Formik, Field, ErrorMessage, Form, FieldArray } from 'formik';
 import * as Yup from 'yup';
 import axios from 'axios';
+import { getFinalTabStatus, filterTasks } from '../../utils/getActiveTab';
 
 const getLabelSchema = () => {
     return {
@@ -35,14 +36,14 @@ const enhance = compose(
         }
     }),
     withPropsOnChange(['details'], ({ details }) => {
-        console.log(details.assignee);
         return {
-            forminitialValues: isEmpty(details.rawOutput) ? getLabelSchema() : details.rawOutput.PartnerOnboarding.PartnerLabels,
+            forminitialValues: isEmpty(details.mappedInput) ? getLabelSchema() : details.mappedInput.PartnerOnboarding.PartnerLabels,
         }
     }),
     pure,
     lifecycle({
         async componentDidMount() {
+            this.props.setSpinner(false);
             if(isEmpty(this.props.taskDetails.assignee)) {
                 const response = await axios.put(`/api/tasks/${this.props.taskId}/claim`, {assignee: ""});
                 if(response) {
@@ -54,15 +55,13 @@ const enhance = compose(
     }),
 );
 
-const PartnerLabel = enhance(({ color, taskDetails, taskId, forminitialValues }) => {
-    console.log("this is header Color", taskDetails);
+const PartnerLabel = enhance(({ color, taskDetails, taskId, caseId, forminitialValues, setSpinner, setTasks }) => {
     return (
         <div>
          <Formik
          enableReinitialize
          initialValues={forminitialValues}
          onSubmit={async(values, actions) => {
-             console.log(values)
             const formValues = {
                 PartnerLabels: null,
                 PartnerOnboarding: {
@@ -71,9 +70,24 @@ const PartnerLabel = enhance(({ color, taskDetails, taskId, forminitialValues })
                     }
                 },
             };
-            console.log(formValues);
-            await axios.post(`/api/tasks/${taskId}/complete`, formValues);
-            actions.setSubmitting(false);
+            const response = await axios.post(`/api/tasks/${taskId}/complete`, formValues);
+            if(response.data) {
+                setSpinner(true);
+                actions.setSubmitting(true);
+            }
+            setTimeout(async() => {
+                const result = await axios.get(`/api/cases/${caseId}`);
+                result && await setTasks(filterTasks(result.data._2.planitems));
+                const newTaskId = result.data._2.planitems.filter(item => item.name === "Header Color" && item.currentState === "Active")[0].id;
+                const response = await axios.put(`/api/tasks/${newTaskId}/claim`, {assignee: ""});
+                if(response) {
+                    const result = await axios.get(`/api/tasks/${newTaskId}`);
+                    setTaskDetails(result.data._2);
+                }
+                // getFinalTabStatus(result.data._2.planitems) && document.getElementById("left-tabs-example-tab-11").click();
+                setSpinner(false);
+                actions.setSubmitting(false);
+            },2000);
          }}
          >
          {
@@ -86,7 +100,7 @@ const PartnerLabel = enhance(({ color, taskDetails, taskId, forminitialValues })
                             {
                                 values.PartnerLabel && values.PartnerLabel.length > 0 && values.PartnerLabel.map(( item , index) =>
                                     <Row key={index}>
-                                        <Col sm="9">
+                                        <Col sm={11}>
                                             <label>Partner Label</label>
                                             
                                                 
@@ -104,7 +118,7 @@ const PartnerLabel = enhance(({ color, taskDetails, taskId, forminitialValues })
                 }
                 </FieldArray>
                 <div>
-                    <Button type="submit" color="success" className="mtl">Save</Button>
+                    <Button type="submit" color="success" disabled={isSubmitting}  className="mtl">Save</Button>
                 </div>
              </Form>
          }

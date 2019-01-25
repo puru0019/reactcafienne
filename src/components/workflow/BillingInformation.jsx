@@ -15,6 +15,7 @@ import { Row, Col, Button } from 'reactstrap';
 import { Formik, Field, ErrorMessage, Form } from 'formik';
 import * as Yup from 'yup';
 import axios from 'axios';
+import { getFinalTabStatus, filterTasks } from '../../utils/getActiveTab';
 
 
 const getFormValues = ( values ) => {
@@ -47,12 +48,13 @@ const enhance = compose(
     withPropsOnChange(['details'], ({ details, mappedProperty }) => {
         console.log(details);
         return {
-            forminitialValues: isEmpty(details.rawOutput) ? getFormValues(details.taskModel.schema.properties[mappedProperty].properties) : details.rawOutput[mappedProperty],
+            forminitialValues: isEmpty(details.mappedInput) ? getFormValues(details.taskModel.schema.properties[mappedProperty].properties) : details.mappedInput[mappedProperty],
         }
     }),
     pure,
     lifecycle({
         async componentDidMount() {
+            this.props.setSpinner(false);
             if(isEmpty(this.props.taskDetails.assignee)) {
                 const response = await axios.put(`/api/tasks/${this.props.taskId}/claim`, {assignee: ""});
                 if(response) {
@@ -64,7 +66,7 @@ const enhance = compose(
     }),
 );
 
-const BillingInformation = enhance(({taskId, forminitialValues }) => {
+const BillingInformation = enhance(({taskId, caseId, forminitialValues, setSpinner, setTasks, setTaskDetails }) => {
     console.log(forminitialValues);
     return (
         <div>
@@ -87,9 +89,26 @@ const BillingInformation = enhance(({taskId, forminitialValues }) => {
                         }
                     }
                     console.log(data);
-                    await axios.post(`/api/tasks/${taskId}/complete`, data);
-                    actions.setSubmitting(false);
-                    //${errors && errors.FirstName && 'error-field
+                    const response = await axios.post(`/api/tasks/${taskId}/complete`, data);
+                    if(response.data) {
+                        setSpinner(true);
+                        actions.setSubmitting(true);
+                    }
+                    
+                    setTimeout(async() => {
+                        const result = await axios.get(`/api/cases/${caseId}`);
+                        console.log(result);
+                        result && await setTasks(filterTasks(result.data._2.planitems));
+                        const newTaskId = result.data._2.planitems.filter(item => item.name === "Billing Information" && item.currentState === "Active")[0].id;
+                        const response = await axios.put(`/api/tasks/${newTaskId}/claim`, {assignee: ""});
+                        if(response) {
+                            const result = await axios.get(`/api/tasks/${newTaskId}`);
+                            setTaskDetails(result.data._2);
+                        }
+                        //getFinalTabStatus(result.data._2.planitems) && document.getElementById("left-tabs-example-tab-11").click();
+                        setSpinner(false);
+                        actions.setSubmitting(false);
+                    },2000);
                 }}
             >
             {

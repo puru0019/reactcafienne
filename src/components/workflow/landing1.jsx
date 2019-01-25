@@ -10,6 +10,7 @@ import {
     lifecycle,
     pure,
 } from  'recompose';
+import ReactLoading from "react-loading";
 import { Button, Modal, Glyphicon, Tab, Row, Col, Nav, NavItem, Panel, Table } from 'react-bootstrap';
 import Coworker1 from './Coworker1.jsx';
 import HeaderColor1 from './HeaderColor1.jsx';
@@ -18,22 +19,40 @@ import BillingInformation from './BillingInformation.jsx';
 import axios from 'axios';
 import PartnerInformation from './PartnerInformation.jsx';
 import PartnerLabel from './PartnerLabel .jsx';
+import isEmpty from '../../utils/isEmpty.js';
+import { filterTasks } from '../../utils/getActiveTab';
+
+const getFinalTabStatus = data => {
+    return data.filter(item => item.currentState === "Completed").length === 11
+}
 
 const enhance = compose(
+    withState('showSpinner', 'setSpinner', false),
     withState('activeTab', 'setActiveTab', '1'),
     withState('taskDetails', 'setTaskDetails'),
     withState('tasks', 'setTasks'),
     withState('showTable', 'setShowTable', false),
     withState('showModal', 'setModalStatus', false),
+    withPropsOnChange(['tasks'], ({ tasks }) => {
+        return {
+            finalTabStatus: isEmpty(tasks) ? false : getFinalTabStatus(tasks),
+        }
+    }),
     withHandlers({
-        handleTab: ({ setActiveTab, activeTab, setTaskDetails }) => async(task, tab) => {
-            
+        handleTab: ({ setActiveTab, activeTab, setTaskDetails, setSpinner }) => async(task, tab) => {
+            console.log(task.id);
             if(activeTab !== tab) {
+                setSpinner(true);
                 setActiveTab(tab);
             }
             const response = await axios.get(`/api/tasks/${task.id}`);
             setTaskDetails(response.data._2);
             
+        },
+        handleFinalTab: ({ setActiveTab, activeTab }) => async(tab) => {
+            if(activeTab !== tab) {
+                setActiveTab(tab)
+            }
         },
         showTasks: ({ setShowTable, showTable }) => () => {
             setShowTable(!showTable);
@@ -43,14 +62,29 @@ const enhance = compose(
         async componentDidMount() {
             const response = await axios.get('/api/cases/user?numberOfResults=1');
             console.log(response);
-            this.props.setTasks(response.data._2[0].planitems);
-        },
+            this.props.setTasks(filterTasks(response.data._2[0].planitems));
+        }
     }),
-    pure,
 );
 
-const Landing1 = enhance(({ activeTab, handleTab, tasks, taskDetails, setActiveTab, setTaskDetails, setTasks, showTasks, showTable, showModal, setModalStatus}) => {
-
+const Landing1 = enhance(({ 
+    activeTab,
+    handleTab,
+    handleFinalTab,
+    tasks, 
+    taskDetails, 
+    setActiveTab, 
+    setTaskDetails, 
+    setTasks, 
+    showTasks, 
+    showTable, 
+    showModal, 
+    setModalStatus,
+    setSpinner,
+    showSpinner,
+    finalTabStatus,
+}) => {
+    console.log(tasks,"Inside dom");
     return (
         <div>
          <Row>
@@ -87,7 +121,7 @@ const Landing1 = enhance(({ activeTab, handleTab, tasks, taskDetails, setActiveT
                             <td><a href="#" onClick={()=> setModalStatus(!showModal)}>Partner on-boarding</a></td>
                             <td>Internal</td>
                             <td>2-Feb-2019</td>
-                            <td>Open</td>
+                            <td>{finalTabStatus ? 'Closed': 'Open'}</td>
                         </tr>
                         <tr>
                             <td>2</td>
@@ -109,49 +143,79 @@ const Landing1 = enhance(({ activeTab, handleTab, tasks, taskDetails, setActiveT
             <Modal.Body>
                 <Tab.Container id="left-tabs-example" activekey={activeTab} onSelect={(key)=>setActiveTab(key)}>
                     <Row className="clearfix">
-                        <Col sm={4}>
+                        <Col sm={5}>
                             <Nav bsStyle="pills" stacked>
                             {
-                                tasks && tasks.map((task,key) =>
+                                tasks && tasks.map((task) =>
                                 task.type === 'HumanTask' &&
-                                <NavItem key={key} eventKey={key} onClick={() => handleTab(task,key) } disabled={task.currentState === 'Available'}>
+                                <NavItem key={task.sortOrder} eventKey={task.sortOrder} onClick={() => handleTab(task,task.sortOrder) } disabled={task.currentState === 'Available'}>
+                                    { task.currentState === "Completed" && <Glyphicon glyph="ok" className="custom-complete"/> }
+                                    <label>{task.name}</label>
+                                </NavItem>
+                                )
+                            }
+                            {
+                                tasks && tasks.map((task, key) => 
+                                task.name === "Finally_Update" &&
+                                <NavItem key={key} eventKey={key} onClick={() => handleFinalTab(key) } disabled={task.currentState === 'Available'}>
+                                    { task.currentState === "Completed" && <Glyphicon glyph="ok" className="custom-complete" />}
                                     <label>{task.name}</label>
                                 </NavItem>
                                 )
                             }
                             </Nav>
                         </Col>
-                        <Col sm={8}>
+                        <Col sm={7}>
+                            { showSpinner && <ReactLoading type="spin" color="#337ab7" className="custom-spinner"/>}
                             <Tab.Content unmountOnExit={true} animation>
-                                    <Tab.Pane eventKey={3} unmountOnExit={true}>
+                                <Tab.Pane eventKey={1} unmountOnExit={true}>
+                                {
+                                    taskDetails && taskDetails.taskName === "Partner Information" && <PartnerInformation taskDetails={taskDetails} setTaskDetails={setTaskDetails} setTasks={setTasks} setSpinner={setSpinner} />
+                                }
+                                </Tab.Pane>
+                                <Tab.Pane eventKey={2} unmountOnExit={true}>
                                     {
-                                        taskDetails && taskDetails.taskName === "Co-Workers" && <Coworker1 taskDetails={taskDetails} setTaskDetails={setTaskDetails} setTasks={setTasks}/>
+                                        taskDetails && taskDetails.taskName === "Co-Workers" && 
+                                        <Coworker1 
+                                        taskDetails={taskDetails} 
+                                        setTaskDetails={setTaskDetails} 
+                                        setTasks={setTasks} 
+                                        setSpinner={setSpinner} 
+                                        />
                                     }
                                 </Tab.Pane>
+                                <Tab.Pane eventKey={3} unmountOnExit={true}>
+                                {
+                                    taskDetails && taskDetails.taskName === "Billing Information" && <BillingInformation taskDetails={taskDetails} setTaskDetails={setTaskDetails} setTasks={setTasks} setSpinner={setSpinner} />
+                                }
+                                </Tab.Pane>
+                                <Tab.Pane eventKey={4} unmountOnExit={true}>
+                                {
+                                    taskDetails && taskDetails.taskName === "Header Color" && <HeaderColor1 taskDetails={taskDetails} setTaskDetails={setTaskDetails} setTasks={setTasks} setSpinner={setSpinner} />
+                                }
+                                </Tab.Pane>
+                                {/* <Tab.Pane eventKey={5} unmountOnExit={true}>
+                                {
+                                    taskDetails && taskDetails.taskName === "Co-Worker Information" && <CoworkerInformation taskDetails={taskDetails} setTaskDetails={setTaskDetails} setTasks={setTasks} setSpinner={setSpinner} />
+                                }
+                                </Tab.Pane>  */}
                                 <Tab.Pane eventKey={5} unmountOnExit={true}>
                                 {
-                                    taskDetails && taskDetails.taskName === "Co-Worker Information" && <CoworkerInformation taskDetails={taskDetails} setTaskDetails={setTaskDetails} />
-                                }
-                                </Tab.Pane> 
-                                <Tab.Pane eventKey={6} unmountOnExit={true}>
-                                {
-                                    taskDetails && taskDetails.taskName === "Billing Information" && <BillingInformation taskDetails={taskDetails} setTaskDetails={setTaskDetails} />
-                                }
-                                </Tab.Pane>
-                                <Tab.Pane eventKey={8} unmountOnExit={true}>
-                                {
-                                    taskDetails && taskDetails.taskName === "Partner Information" && <PartnerInformation taskDetails={taskDetails} setTaskDetails={setTaskDetails} />
+                                    taskDetails && taskDetails.taskName === "Partner Labels" && 
+                                    <PartnerLabel
+                                    taskDetails={taskDetails} 
+                                    setTaskDetails={setTaskDetails} 
+                                    setTasks={setTasks} 
+                                    setSpinner={setSpinner} />
                                 }
                                 </Tab.Pane>
-                                <Tab.Pane eventKey={9} unmountOnExit={true}>
-                                {
-                                    taskDetails && taskDetails.taskName === "Header Color" && <HeaderColor1 taskDetails={taskDetails} setTaskDetails={setTaskDetails}/>
-                                }
-                                </Tab.Pane>
-                                <Tab.Pane eventKey={10} unmountOnExit={true}>
-                                {
-                                    taskDetails && taskDetails.taskName === "Partner Labels" && <PartnerLabel taskDetails={taskDetails} setTaskDetails={setTaskDetails}/>
-                                }
+                                <Tab.Pane eventKey={11} unmountOnExit={true}>
+                                    <div className="custom-complete1">
+                                        <Glyphicon glyph="ok" className="custom-font" />
+                                    </div>
+                                    <label className="custom-label">
+                                        Congrats you have finished 60% profile. Go to partner setting to complete your profile
+                                    </label>
                                 </Tab.Pane>
                             </Tab.Content>
                         </Col>

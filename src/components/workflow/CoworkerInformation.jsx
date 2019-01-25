@@ -15,6 +15,7 @@ import { Row, Col, Button } from 'reactstrap';
 import { Formik, Field, ErrorMessage, Form } from 'formik';
 import * as Yup from 'yup';
 import axios from 'axios';
+import { getFinalTabStatus } from '../../utils/getActiveTab';
 
 
 const getFormValues = ( values ) => {
@@ -47,6 +48,7 @@ const enhance = compose(
     pure,
     lifecycle({
         async componentDidMount() {
+            this.props.setSpinner(false);
             if(isEmpty(this.props.taskDetails.assignee)) {
                 const response = await axios.put(`/api/tasks/${this.props.taskId}/claim`, {assignee: ""});
                 if(response) {
@@ -58,7 +60,7 @@ const enhance = compose(
     }),
 );
 
-const CoworkerInformation = enhance(({taskId, forminitialValues }) => {
+const CoworkerInformation = enhance(({taskId, caseId, forminitialValues, setSpinner, setTasks }) => {
     return (
         <div>
             <Formik
@@ -67,7 +69,7 @@ const CoworkerInformation = enhance(({taskId, forminitialValues }) => {
                 validationSchema={Yup.object({
                     IsAdministrator: Yup.string().required('Required'),
                     FirstName: Yup.string().required('First name is required'),
-                    TelePhone: Yup.number().min(10).required('Telephone is required'),
+                    TelePhone: Yup.number().test('len', 'Must be exactly 10 characters', val => val.toString().length === 10).required('Telephone is required'),
                     Gender: Yup.string().required('Required'),
                     LastName: Yup.string().required('Last name is required'),
                     Insert: Yup.string().required('surname name is required'),
@@ -81,8 +83,19 @@ const CoworkerInformation = enhance(({taskId, forminitialValues }) => {
                         }
                     }
                     console.log(data);
-                    await axios.post(`/api/tasks/${taskId}/complete`, data);
-                    actions.setSubmitting(false);
+                    const response = await axios.post(`/api/tasks/${taskId}/complete`, data);
+                    if(response.data) {
+                        setSpinner(true);
+                        actions.setSubmitting(true);
+                    }
+                    setTimeout(async() => {
+                        const result = await axios.get(`/api/cases/${caseId}`);
+                        console.log(result);
+                        result && await setTasks(result.data._2.planitems);
+                        getFinalTabStatus(result.data._2.planitems) && document.getElementById("left-tabs-example-tab-11").click();
+                        setSpinner(false);
+                        actions.setSubmitting(false);
+                    },2000)
                     //${errors && errors.FirstName && 'error-field
                 }}
             >

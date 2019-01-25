@@ -15,6 +15,7 @@ import { Row, Col, Button } from 'reactstrap';
 import { Formik, Field, ErrorMessage, Form } from 'formik';
 import * as Yup from 'yup';
 import axios from 'axios';
+import { getFinalTabStatus } from '../../utils/getActiveTab';
 
 
 const enhance = compose(
@@ -34,6 +35,8 @@ const enhance = compose(
     pure,
     lifecycle({
         async componentDidMount() {
+            console.log("component mount");
+            this.props.setSpinner(false);
             if(isEmpty(this.props.taskDetails.assignee)) {
                 const response = await axios.put(`/api/tasks/${this.props.taskId}/claim`, {assignee: ""});
                 if(response) {
@@ -45,7 +48,7 @@ const enhance = compose(
     }),
 );
 
-const Coworker1 = enhance(({ output, email, taskId, setTasks }) => {
+const Coworker1 = enhance(({ output, email, taskId, caseId, setTasks, setSpinner }) => {
     console.log(output, email,"co worker");
     return (
         <div>
@@ -61,12 +64,21 @@ const Coworker1 = enhance(({ output, email, taskId, setTasks }) => {
                             Email: values.email
                         },
                     };
-                    await axios.post(`/api/tasks/${taskId}/complete`, data);
+                    const response = await axios.post(`/api/tasks/${taskId}/complete`, data);
+                    console.log("spinner not active");
+                    if(response.data) {
+                        console.log("spinner active");
+                        setSpinner(true);
+                        actions.setSubmitting(true);
+                    }
                     setTimeout(async() =>{
-                        const result = await axios.get('/api/cases/user?numberOfResults=1');
-                        result && await setTasks(result.data._2[0].planitems);
-                    },5000)
-                    actions.setSubmitting(false);
+                        const result = await axios.get(`/api/cases/${caseId}`);
+                        console.log(result);
+                        result && await setTasks(result.data._2.planitems);
+                        getFinalTabStatus(result.data._2.planitems) && document.getElementById("left-tabs-example-tab-11").click();
+                        setSpinner(false);
+                        actions.setSubmitting(false);
+                    },7000)
                 }}
             >
             {
