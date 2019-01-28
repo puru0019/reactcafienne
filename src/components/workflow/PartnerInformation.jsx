@@ -48,7 +48,7 @@ const enhance = compose(
     withPropsOnChange(['details'], ({ details, mappedProperty }) => {
         console.log(details);
         return {
-            forminitialValues: isEmpty(details.mappedInput) ? getFormValues(details.taskModel.schema.properties[mappedProperty].properties) : details.mappedInput[mappedProperty],
+            forminitialValues: isEmpty(details.mappedInput.PartnerInformation) ? getFormValues(details.taskModel.schema.properties[mappedProperty].properties) : details.mappedInput[mappedProperty],
         }
     }),
     pure,

@@ -31,8 +31,8 @@ const enhance = compose(
     withPropsOnChange(['output','details'], ({ output, details }) => {
         console.log(details.assignee);
         return {
-            color: isEmpty(output) ? '' : output.PartnerLabels.Color,
-            options: isEmpty(details) ? [] : details.taskModel.schema.properties.PartnerLabels.properties.Color.enum,
+            color: isEmpty(details.mappedInput.Header_Color) ? '' : details.mappedInput.Header_Color.Color,
+            options: isEmpty(details) ? [] : details.taskModel.schema.properties.Header_Color.properties.Color.enum,
         }
     }),
     pure,
@@ -60,10 +60,9 @@ const HeaderColor1 = enhance(({ color, taskDetails, taskId, options, setSpinner,
          initialValues={{color}}
          onSubmit={async(values, actions) => {
             const formValues = {
-                PartnerLabels: {
+                Header_Color: {
                     Color: values.color
                 },
-                Header_Color: null
             };
             const response = await axios.post(`/api/tasks/${taskId}/complete`, formValues);
             if(response.data) {
@@ -72,10 +71,8 @@ const HeaderColor1 = enhance(({ color, taskDetails, taskId, options, setSpinner,
             }
             setTimeout(async() => {
                 const result = await axios.get(`/api/cases/${caseId}`);
-                
                 result && await setTasks(filterTasks(result.data._2.planitems));
                 const newTaskId = result.data._2.planitems.filter(item => item.name === "Header Color" && item.currentState === "Active")[0].id;
-                
                 const response = await axios.put(`/api/tasks/${newTaskId}/claim`, {assignee: ""});
                 if(response) {
                     const result = await axios.get(`/api/tasks/${newTaskId}`);

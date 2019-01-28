@@ -9,7 +9,7 @@ module.exports = {
                 test: /\.js|jsx$/,
                 exclude: '/node_modules/',
                 use: {
-                    loader: "babel-loader"
+                    loader: "babel-loader",
                 }
             },
             {
@@ -57,6 +57,17 @@ module.exports = {
             },
         ]
     },
+    devServer: {
+        proxy: {
+        '/api': {
+                target: 'http://cmdocker.westeurope.cloudapp.azure.com:8081/',
+                secure: false,
+                changeOrigin: true,
+            }
+        },
+        historyApiFallback: true,
+        hot: true,
+    },
     plugins: [
         new HtmlWebPackPlugin({
           template: "./src/index.html",
@@ -66,5 +77,5 @@ module.exports = {
           filename: devMode ? '[name].css' : '[name].[hash].css',
           chunkFilename: devMode ? '[id].css' : '[id].[hash].css',
         })
-    ]
+    ],
 };

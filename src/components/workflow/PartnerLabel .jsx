@@ -37,7 +37,7 @@ const enhance = compose(
     }),
     withPropsOnChange(['details'], ({ details }) => {
         return {
-            forminitialValues: isEmpty(details.mappedInput) ? getLabelSchema() : details.mappedInput.PartnerOnboarding.PartnerLabels,
+            forminitialValues: isEmpty(details.mappedInput.PartnerOnboarding) ? getLabelSchema() : details.mappedInput.PartnerOnboarding.PartnerLabels,
         }
     }),
     pure,
@@ -55,7 +55,7 @@ const enhance = compose(
     }),
 );
 
-const PartnerLabel = enhance(({ color, taskDetails, taskId, caseId, forminitialValues, setSpinner, setTasks }) => {
+const PartnerLabel = enhance(({ setTaskDetails, taskId, caseId, forminitialValues, setSpinner, setTasks }) => {
     return (
         <div>
          <Formik
@@ -78,7 +78,7 @@ const PartnerLabel = enhance(({ color, taskDetails, taskId, caseId, forminitialV
             setTimeout(async() => {
                 const result = await axios.get(`/api/cases/${caseId}`);
                 result && await setTasks(filterTasks(result.data._2.planitems));
-                const newTaskId = result.data._2.planitems.filter(item => item.name === "Header Color" && item.currentState === "Active")[0].id;
+                const newTaskId = result.data._2.planitems.filter(item => item.name === "Partner Labels" && item.currentState === "Active")[0].id;
                 const response = await axios.put(`/api/tasks/${newTaskId}/claim`, {assignee: ""});
                 if(response) {
                     const result = await axios.get(`/api/tasks/${newTaskId}`);

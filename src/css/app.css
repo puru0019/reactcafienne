@@ -1,0 +1,52 @@
+.mtl {
+    margin-top: 10px;
+}
+.mbl {
+    margin-bottom: 10px;
+}
+.error-message {
+    color: red;
+}
+.custom-remove {
+    width: 83%;
+    display: inline-block;
+    margin-right: 10px;
+}
+.error-field {
+    border: 1px solid red;
+}
+.pa {
+    padding: 10px;
+}
+
+.custom-spinner {
+    position: fixed;
+    z-index: 100;
+    left: 50%;
+    top: 40%;
+}
+
+.custom-complete {
+    color: #49c349;
+    margin-right: 3px;
+}
+
+.custom-color {
+    color: #49c349;
+}
+
+.custom-font {
+    font-size: 50px;
+    color: #63b363;
+}
+
+.custom-complete1 {
+    left: 56%;
+    position: fixed;
+}
+
+.custom-label {
+    position: fixed;
+    top: 30%;
+    color: #63b363;
+}

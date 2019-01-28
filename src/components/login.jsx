@@ -1,27 +1,35 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { connect } from 'react-redux';
 import { Loginuser } from '../actions/authAction';
 
 const Login = (props) => {
-    const email = handleInputForm('');
+    const username = handleInputForm('');
     const password = handleInputForm('');
     const handleSubmit = (e) => {
         e.preventDefault();
 
         const newUser = {
-            email,
-            password,
+            username: username.value,
+            password: password.value,
         }
-        //Loginuser(newUser);
+        props.Loginuser(newUser);
     }
+    useEffect(() => {
+        if( props.auth.isAuthenticated ) {
+            props.history.push('/landing1')
+        } else {
+            props.history.push('/')
+        }
+    }, [props.auth.isAuthenticated]);
+    
     return (
         <div className="container">
             <div className="row">
                 <div className="col-xs-4">
                     <form onSubmit={(e) => handleSubmit(e)}>
                         <div className="form-group">
-                            <label>Email:</label>
-                            <input type="email" {...email} className="form-control" />
+                            <label>username:</label>
+                            <input type="text" {...username} className="form-control" />
                         </div>
                         <div className="form-group">
                             <label>Password:</label>
@@ -46,4 +54,8 @@ const handleInputForm = (initialValue) => {
     }
 }
 
-export default connect(null, { Loginuser })(Login);
+const mapStateToProps = state => ({
+    auth: state.auth,
+});
+
+export default connect(mapStateToProps, { Loginuser })(Login);

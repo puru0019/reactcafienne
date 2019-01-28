@@ -15,7 +15,7 @@ import { Row, Col, Button } from 'reactstrap';
 import { Formik, Field, ErrorMessage, Form } from 'formik';
 import * as Yup from 'yup';
 import axios from 'axios';
-import { getFinalTabStatus } from '../../utils/getActiveTab';
+import { filterTasks } from '../../utils/getActiveTab';
 
 
 const getFormValues = ( values ) => {
@@ -42,7 +42,7 @@ const enhance = compose(
     withPropsOnChange(['details'], ({details }) => {
         console.log(details);
         return {
-            forminitialValues: isEmpty(details.rawOutput) ? getFormValues(details.taskModel.schema.properties.AddMedewerkers.properties) : details.rawOutput.AddMedewerkers,
+            forminitialValues: isEmpty(details.mappedInput.AddMedewerkers) ? getFormValues(details.taskModel.schema.properties.AddMedewerkers.properties) : details.mappedInput.AddMedewerkers,
         }
     }),
     pure,
@@ -60,7 +60,8 @@ const enhance = compose(
     }),
 );
 
-const CoworkerInformation = enhance(({taskId, caseId, forminitialValues, setSpinner, setTasks }) => {
+const CoworkerInformation = enhance(({taskId, caseId, forminitialValues, setSpinner, setTasks, setTaskDetails }) => {
+    console.log(forminitialValues);
     return (
         <div>
             <Formik
@@ -69,7 +70,7 @@ const CoworkerInformation = enhance(({taskId, caseId, forminitialValues, setSpin
                 validationSchema={Yup.object({
                     IsAdministrator: Yup.string().required('Required'),
                     FirstName: Yup.string().required('First name is required'),
-                    TelePhone: Yup.number().test('len', 'Must be exactly 10 characters', val => val.toString().length === 10).required('Telephone is required'),
+                    TelePhone: Yup.number().required('Telephone is required'),
                     Gender: Yup.string().required('Required'),
                     LastName: Yup.string().required('Last name is required'),
                     Insert: Yup.string().required('surname name is required'),
@@ -90,13 +91,17 @@ const CoworkerInformation = enhance(({taskId, caseId, forminitialValues, setSpin
                     }
                     setTimeout(async() => {
                         const result = await axios.get(`/api/cases/${caseId}`);
-                        console.log(result);
-                        result && await setTasks(result.data._2.planitems);
-                        getFinalTabStatus(result.data._2.planitems) && document.getElementById("left-tabs-example-tab-11").click();
+                        result && await setTasks(filterTasks(result.data._2.planitems));
+                        const newTaskId = result.data._2.planitems.filter(item => item.name === "Co-Worker Information" && item.currentState === "Active")[0].id;
+                        const response = await axios.put(`/api/tasks/${newTaskId}/claim`, {assignee: ""});
+                        if(response) {
+                            const result = await axios.get(`/api/tasks/${newTaskId}`);
+                            setTaskDetails(result.data._2);
+                        }
+                        //getFinalTabStatus(result.data._2.planitems) && document.getElementById("left-tabs-example-tab-11").click();
                         setSpinner(false);
                         actions.setSubmitting(false);
-                    },2000)
-                    //${errors && errors.FirstName && 'error-field
+                    },2000);
                 }}
             >
             {

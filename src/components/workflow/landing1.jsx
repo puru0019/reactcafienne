@@ -23,7 +23,7 @@ import isEmpty from '../../utils/isEmpty.js';
 import { filterTasks } from '../../utils/getActiveTab';
 
 const getFinalTabStatus = data => {
-    return data.filter(item => item.currentState === "Completed").length === 11
+    return data.filter(item => item.currentState === "Completed").length === 5
 }
 
 const enhance = compose(
@@ -71,12 +71,12 @@ const Landing1 = enhance(({
     activeTab,
     handleTab,
     handleFinalTab,
-    tasks, 
+    tasks,
     taskDetails, 
     setActiveTab, 
     setTaskDetails, 
     setTasks, 
-    showTasks, 
+    showTasks,
     showTable, 
     showModal, 
     setModalStatus,
@@ -84,7 +84,7 @@ const Landing1 = enhance(({
     showSpinner,
     finalTabStatus,
 }) => {
-    console.log(tasks,"Inside dom");
+    console.log(tasks,"get tasks")
     return (
         <div>
          <Row>
@@ -97,9 +97,6 @@ const Landing1 = enhance(({
                         <div className="pa">
                             <Panel.Toggle componentClass="a" onClick={() => showTasks()}>My Tasks</Panel.Toggle>
                         </div>
-                        <div className="pa">
-                            <Panel.Toggle componentClass="a" disabled={true}>All Tasks</Panel.Toggle>
-                        </div>
                     </Panel.Body>
                 </Panel>
             </Col>
@@ -111,7 +108,6 @@ const Landing1 = enhance(({
                         <th>#</th>
                         <th>Task</th>
                         <th>Task Category</th>
-                        <th>Due Date</th>
                         <th>Status</th>
                         </tr>
                     </thead>
@@ -120,14 +116,12 @@ const Landing1 = enhance(({
                             <td>1</td>
                             <td><a href="#" onClick={()=> setModalStatus(!showModal)}>Partner on-boarding</a></td>
                             <td>Internal</td>
-                            <td>2-Feb-2019</td>
                             <td>{finalTabStatus ? 'Closed': 'Open'}</td>
                         </tr>
                         <tr>
                             <td>2</td>
                             <td>Task 2</td>
                             <td>Financial Reporting</td>
-                            <td>19-Mar-2019</td>
                             <td>Open</td>
                         </tr>
 
@@ -149,16 +143,16 @@ const Landing1 = enhance(({
                                 tasks && tasks.map((task) =>
                                 task.type === 'HumanTask' &&
                                 <NavItem key={task.sortOrder} eventKey={task.sortOrder} onClick={() => handleTab(task,task.sortOrder) } disabled={task.currentState === 'Available'}>
-                                    { task.currentState === "Completed" && <Glyphicon glyph="ok" className="custom-complete"/> }
+                                    {/* { task.currentState === "Completed" && <Glyphicon glyph="ok" className="custom-complete"/> } */}
                                     <label>{task.name}</label>
                                 </NavItem>
                                 )
                             }
                             {
-                                tasks && tasks.map((task, key) => 
+                                tasks && tasks.map((task) => 
                                 task.name === "Finally_Update" &&
-                                <NavItem key={key} eventKey={key} onClick={() => handleFinalTab(key) } disabled={task.currentState === 'Available'}>
-                                    { task.currentState === "Completed" && <Glyphicon glyph="ok" className="custom-complete" />}
+                                <NavItem key={task.sortOrder} eventKey={task.sortOrder} onClick={() => handleFinalTab(task.sortOrder) } disabled={task.currentState === 'Available'}>
+                                    {/* { task.currentState === "Completed" && <Glyphicon glyph="ok" className="custom-complete" />} */}
                                     <label>{task.name}</label>
                                 </NavItem>
                                 )
@@ -180,26 +174,28 @@ const Landing1 = enhance(({
                                         taskDetails={taskDetails} 
                                         setTaskDetails={setTaskDetails} 
                                         setTasks={setTasks} 
-                                        setSpinner={setSpinner} 
+                                        setSpinner={setSpinner}
                                         />
                                     }
                                 </Tab.Pane>
+                                {
                                 <Tab.Pane eventKey={3} unmountOnExit={true}>
+                                    {
+                                        taskDetails && taskDetails.taskName === "Co-Worker Information" && <CoworkerInformation taskDetails={taskDetails} setTaskDetails={setTaskDetails} setTasks={setTasks} setSpinner={setSpinner} />
+                                    }
+                                </Tab.Pane>
+                                }
+                                <Tab.Pane eventKey={4} unmountOnExit={true}>
                                 {
                                     taskDetails && taskDetails.taskName === "Billing Information" && <BillingInformation taskDetails={taskDetails} setTaskDetails={setTaskDetails} setTasks={setTasks} setSpinner={setSpinner} />
                                 }
                                 </Tab.Pane>
-                                <Tab.Pane eventKey={4} unmountOnExit={true}>
+                                <Tab.Pane eventKey={5} unmountOnExit={true}>
                                 {
                                     taskDetails && taskDetails.taskName === "Header Color" && <HeaderColor1 taskDetails={taskDetails} setTaskDetails={setTaskDetails} setTasks={setTasks} setSpinner={setSpinner} />
                                 }
                                 </Tab.Pane>
-                                {/* <Tab.Pane eventKey={5} unmountOnExit={true}>
-                                {
-                                    taskDetails && taskDetails.taskName === "Co-Worker Information" && <CoworkerInformation taskDetails={taskDetails} setTaskDetails={setTaskDetails} setTasks={setTasks} setSpinner={setSpinner} />
-                                }
-                                </Tab.Pane>  */}
-                                <Tab.Pane eventKey={5} unmountOnExit={true}>
+                                <Tab.Pane eventKey={6} unmountOnExit={true}>
                                 {
                                     taskDetails && taskDetails.taskName === "Partner Labels" && 
                                     <PartnerLabel
@@ -209,7 +205,7 @@ const Landing1 = enhance(({
                                     setSpinner={setSpinner} />
                                 }
                                 </Tab.Pane>
-                                <Tab.Pane eventKey={11} unmountOnExit={true}>
+                                <Tab.Pane eventKey={7} unmountOnExit={true}>
                                     <div className="custom-complete1">
                                         <Glyphicon glyph="ok" className="custom-font" />
                                     </div>

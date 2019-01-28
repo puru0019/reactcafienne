@@ -1,1 +1,11 @@
 export const TEST_DISPATCH = 'TEST_DISPATCH';
+export const SET_CURRENT_USER = 'SET_CURRENT_USER';
+export const SET_CURRENT_REPO_LIST = 'SET_CURRENT_REPO_LIST';
+export const SET_CURRENT_REPO = 'SET_CURRENT_REPO';
+export const SET_CASE = 'SET_CASE';
+export const SET_CASE_INSTANCE = 'SET_CASE_INSTANCE';
+export const SET_DISCREATIONARY_CASE = 'SET_DISCREATIONARY_CASE';
+export const SET_PLAN_ID = 'SET_PLAN_ID';
+export const SET_PLAN = 'SET_PLAN';
+export const LOAD_TASK = 'LOAD_TASK';
+export const SUBMIT_PLAN = 'SUBMIT_PLAN';
