@@ -1,9 +1,9 @@
-import axios from 'axios';
+import Axios from 'axios';
 
 export const setAuthToken = token => {
     if(token) {
-        axios.defaults.headers.common['X-AUTH-CAFIENNE'] = token;
+        Axios.defaults.headers.common['X-AUTH-CAFIENNE'] = token;
     } else {
-        delete axios.defaults.headers.common['X-AUTH-CAFIENNE'];
+        delete Axios.defaults.headers.common['X-AUTH-CAFIENNE'];
     }
 }
