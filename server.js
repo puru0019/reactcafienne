@@ -1,15 +1,10 @@
 var express = require('express');
-const path = require('path');
 var app = express();
 
 
 var PORT = process.env.PORT || 9000;
-
-app.use(express.static(path.join(__dirname, 'dist')));
-
-app.get('/*', function(req, res) {
-  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
-});
+console.log(__dirname,"dir name");
+app.use(express.static(__dirname + '/dist'));
 
 app.listen(PORT, function() {
 		console.log("listening to port" + PORT);
