@@ -57,6 +57,7 @@ module.exports = {
             },
         ]
     },
+    externals: ['axios'],
     devServer: {
         proxy: {
         '/api': {
