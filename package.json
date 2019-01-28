@@ -10,6 +10,7 @@
   "author": "Gopi",
   "license": "ISC",
   "dependencies": {
+    "axios": "^0.18.0",
     "formik": "^1.4.2",
     "mdbreact": "^4.8.5-patch.1",
     "react": "^16.7.0-alpha.2",
