@@ -1,5 +1,5 @@
 export const getFinalTabStatus = data => {
-    return data.filter(item => item.currentState === "Completed").length === 11
+    return data.filter(item => item.currentState === "Completed" && item.name ==="Final Update").length === 1
 }
 
 export const filterTasks = data => {
@@ -14,7 +14,7 @@ export const filterTasks = data => {
                 ...item,
                 sortOrder: 2,
             }
-        } else if(item.name === "Co-Worker Information" && (item.currentState ==="Active")) {
+        } else if(item.name === "Co-Worker Information") {
             return {
                 ...item,
                 sortOrder: 3,
@@ -34,7 +34,7 @@ export const filterTasks = data => {
                 ...item,
                 sortOrder: 6,
             }
-        } else if(item.name === "Finally_Update") {
+        } else if(item.name === "Final Update") {
             return {
                 ...item,
                 sortOrder: 7,
@@ -45,7 +45,7 @@ export const filterTasks = data => {
                 sortOrder: 0
             }
         }
-    }).filter(item => item.currentState === "Active" && item.type === "HumanTask" || item.name === "Co-Workers" || item.name === "Finally_Update").sort((a,b) => a.sortOrder-b.sortOrder);
+    }).filter(item => item.currentState === "Active" && item.type === "HumanTask" || item.name === "Co-Workers" || item.name === "Final Update").sort((a,b) => a.sortOrder-b.sortOrder);
     return result;
 }
 

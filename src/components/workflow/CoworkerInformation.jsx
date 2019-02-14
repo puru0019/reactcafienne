@@ -1,67 +1,23 @@
 import React from 'react';
-import { connect } from 'react-redux';
 import {
     compose,
-    withProps,
-    setDisplayName,
-    withState,
-    withHandlers,
-    withPropsOnChange,
-    lifecycle,
     pure,
 } from  'recompose';
-import isEmpty from '../../utils/isEmpty';
 import { Row, Col, Button } from 'reactstrap';
 import { Formik, Field, ErrorMessage, Form } from 'formik';
 import * as Yup from 'yup';
-import axios from 'axios';
-import { filterTasks } from '../../utils/getActiveTab';
-
-
-const getFormValues = ( values ) => {
-    const schema = Object.keys(values).map((value) => {
-        return {
-            [value]:''
-        }
-    });
-    let result = {};
-    schema.forEach((item) => {
-        result = {...result, ...item}
-    });
-    return result;
-}
+import { manageProps, managePropsOnChange } from './withMangaeProps';
+import { manageLifeCycle } from './manageLifeCycle';
+import { formSubmit } from './formUtilities';
 
 const enhance = compose(
-    withProps(props => {
-        return {
-            taskId: props.taskDetails.id,
-            caseId: props.taskDetails.caseInstanceId,
-            details: props.taskDetails,
-        }
-    }),
-    withPropsOnChange(['details'], ({details }) => {
-        console.log(details);
-        return {
-            forminitialValues: isEmpty(details.mappedInput.AddMedewerkers) ? getFormValues(details.taskModel.schema.properties.AddMedewerkers.properties) : details.mappedInput.AddMedewerkers,
-        }
-    }),
+    manageProps,
+    managePropsOnChange,
     pure,
-    lifecycle({
-        async componentDidMount() {
-            this.props.setSpinner(false);
-            if(isEmpty(this.props.taskDetails.assignee)) {
-                const response = await axios.put(`/api/tasks/${this.props.taskId}/claim`, {assignee: ""});
-                if(response) {
-                    const result = await axios.get(`/api/tasks/${this.props.taskId}`);
-                    this.props.setTaskDetails(result.data._2);
-                }
-            }
-        }
-    }),
+    manageLifeCycle,
 );
 
-const CoworkerInformation = enhance(({taskId, caseId, forminitialValues, setSpinner, setTasks, setTaskDetails }) => {
-    console.log(forminitialValues);
+const CoworkerInformation = enhance(({forminitialValues, ...restProps }) => {
     return (
         <div>
             <Formik
@@ -77,31 +33,7 @@ const CoworkerInformation = enhance(({taskId, caseId, forminitialValues, setSpin
                     MedewerkersEmail: Yup.string().email('Invalid Email').required('Medwerkers email is required'),
                 })}
                 onSubmit= { async(values, actions) =>{
-                    console.log(values);
-                    const data = {
-                        AddMedewerkers: {
-                            ...values
-                        }
-                    }
-                    console.log(data);
-                    const response = await axios.post(`/api/tasks/${taskId}/complete`, data);
-                    if(response.data) {
-                        setSpinner(true);
-                        actions.setSubmitting(true);
-                    }
-                    setTimeout(async() => {
-                        const result = await axios.get(`/api/cases/${caseId}`);
-                        result && await setTasks(filterTasks(result.data._2.planitems));
-                        const newTaskId = result.data._2.planitems.filter(item => item.name === "Co-Worker Information" && item.currentState === "Active")[0].id;
-                        const response = await axios.put(`/api/tasks/${newTaskId}/claim`, {assignee: ""});
-                        if(response) {
-                            const result = await axios.get(`/api/tasks/${newTaskId}`);
-                            setTaskDetails(result.data._2);
-                        }
-                        //getFinalTabStatus(result.data._2.planitems) && document.getElementById("left-tabs-example-tab-11").click();
-                        setSpinner(false);
-                        actions.setSubmitting(false);
-                    },2000);
+                    formSubmit(values, actions, 4, restProps);
                 }}
             >
             {

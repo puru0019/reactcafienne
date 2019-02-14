@@ -57,11 +57,10 @@ module.exports = {
             },
         ]
     },
-    externals: ['axios'],
     devServer: {
         proxy: {
         '/api': {
-                target: 'http://cmdocker.westeurope.cloudapp.azure.com:8081/',
+                target: 'http://localhost:8081/',
                 secure: false,
                 changeOrigin: true,
             }
@@ -71,7 +70,7 @@ module.exports = {
     },
     plugins: [
         new HtmlWebPackPlugin({
-          template: "./public/index.html",
+          template: "./src/index.html",
           filename: "./index.html"
         }),
         new MiniCssExtractPlugin({

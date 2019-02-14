@@ -19,6 +19,10 @@
     padding: 10px;
 }
 
+.ptl {
+    padding-top: 7px;
+}
+
 .custom-spinner {
     position: fixed;
     z-index: 100;

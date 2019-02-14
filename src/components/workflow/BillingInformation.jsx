@@ -1,73 +1,25 @@
 import React from 'react';
-import { connect } from 'react-redux';
 import {
     compose,
-    withProps,
     setDisplayName,
-    withState,
-    withHandlers,
-    withPropsOnChange,
-    lifecycle,
     pure,
 } from  'recompose';
-import isEmpty from '../../utils/isEmpty';
 import { Row, Col, Button } from 'reactstrap';
 import { Formik, Field, ErrorMessage, Form } from 'formik';
 import * as Yup from 'yup';
-import axios from 'axios';
-import { getFinalTabStatus, filterTasks } from '../../utils/getActiveTab';
-
-
-const getFormValues = ( values ) => {
-    const schema = Object.keys(values).map((value) => {
-        return {
-            [value]:''
-        }
-    });
-    let result = {};
-    schema.forEach((item) => {
-        result = {...result, ...item}
-    });
-    return result;
-}
-
-const getMappedProperty = value => {
-    const schema = Object.keys(value);
-    return schema[0];
-}
+import { manageProps, managePropsOnChange } from './withMangaeProps';
+import { manageLifeCycle } from './manageLifeCycle';
+import { formSubmit } from './formUtilities';
 
 const enhance = compose(
-    withProps(props => {
-        return {
-            taskId: props.taskDetails.id,
-            caseId: props.taskDetails.caseInstanceId,
-            details: props.taskDetails,
-            mappedProperty: getMappedProperty(props.taskDetails.taskInput),
-        }
-    }),
-    withPropsOnChange(['details'], ({ details, mappedProperty }) => {
-        console.log(details);
-        return {
-            forminitialValues: isEmpty(details.mappedInput.BillingInformation) ? getFormValues(details.taskModel.schema.properties[mappedProperty].properties) : details.mappedInput[mappedProperty],
-        }
-    }),
+    setDisplayName("BillingInformation"),
+    manageProps,
+    managePropsOnChange,
     pure,
-    lifecycle({
-        async componentDidMount() {
-            this.props.setSpinner(false);
-            if(isEmpty(this.props.taskDetails.assignee)) {
-                const response = await axios.put(`/api/tasks/${this.props.taskId}/claim`, {assignee: ""});
-                if(response) {
-                    const result = await axios.get(`/api/tasks/${this.props.taskId}`);
-                    this.props.setTaskDetails(result.data._2);
-                }
-            }
-        }
-    }),
+    manageLifeCycle,
 );
 
-const BillingInformation = enhance(({taskId, caseId, forminitialValues, setSpinner, setTasks, setTaskDetails }) => {
-    console.log(forminitialValues);
+const BillingInformation = enhance(({forminitialValues, ...restProp} ) => {
     return (
         <div>
             <Formik
@@ -81,34 +33,8 @@ const BillingInformation = enhance(({taskId, caseId, forminitialValues, setSpinn
                     Nameof: Yup.string().required('Last name is required'),
                     InvoiceEmail: Yup.string().email('Invalid Email').required('Medwerkers email is required'),
                 })}
-                onSubmit= { async(values, actions) =>{
-                    console.log(values);
-                    const data = {
-                        BillingInformation: {
-                            ...values
-                        }
-                    }
-                    console.log(data);
-                    const response = await axios.post(`/api/tasks/${taskId}/complete`, data);
-                    if(response.data) {
-                        setSpinner(true);
-                        actions.setSubmitting(true);
-                    }
-                    
-                    setTimeout(async() => {
-                        const result = await axios.get(`/api/cases/${caseId}`);
-                        console.log(result);
-                        result && await setTasks(filterTasks(result.data._2.planitems));
-                        const newTaskId = result.data._2.planitems.filter(item => item.name === "Billing Information" && item.currentState === "Active")[0].id;
-                        const response = await axios.put(`/api/tasks/${newTaskId}/claim`, {assignee: ""});
-                        if(response) {
-                            const result = await axios.get(`/api/tasks/${newTaskId}`);
-                            setTaskDetails(result.data._2);
-                        }
-                        //getFinalTabStatus(result.data._2.planitems) && document.getElementById("left-tabs-example-tab-11").click();
-                        setSpinner(false);
-                        actions.setSubmitting(false);
-                    },2000);
+                onSubmit= { (values, actions) =>{
+                    formSubmit(values, actions, 5, restProp);
                 }}
             >
             {

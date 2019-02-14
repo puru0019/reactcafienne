@@ -4,7 +4,7 @@ import { getCurrentCase } from '../actions/repositoryListAction';
 import { getCase, getDiscreationaryCase, getCaseDetails } from '../actions/caseAction';
 import { loadTask } from '../actions/taskAction';
 import ReactLoading from "react-loading";
-import { Button, Modal, Glyphicon, Tab, Row, Col, Nav, NavItem, Panel } from 'react-bootstrap';
+import { Button, Modal, Glyphicon, Tab, Row, Col, Nav, NavItem, Panel, PageHeader } from 'react-bootstrap';
 import DynamicForm from './formContainer.jsx';
 import HeaderForm from './headerForm.jsx';
 import  isEmpty from '../utils/isEmpty';
@@ -49,21 +49,47 @@ const RenderCaseList = ({ currentCase, getCurrentCase, getDiscreationaryCase, ge
                 }
                 {
                     !isEmpty(currentCase) &&
-                    <Panel bsStyle="primary" className="mtl">
-                        <Panel.Heading>
-                            <Panel.Title componentClass="h3">All Tasks</Panel.Title>
-                        </Panel.Heading>
+                    <div>
+                    <PageHeader>
+                        All Tasks
+                    </PageHeader>
+                    <Panel className="">
                         <Panel.Body>
                             <div className="row">
-                                <div className="col-xs-9">
+                                <div className="col-xs-9 ptl">
                                     {currentCase.definition}
                                 </div>
-                                <div className="col-xs-3">
+                                <div className="col-xs-3" style={{textAlign: "right"}}>
                                     <Button bsStyle="primary" onClick={(e) => createCase(e)}>Start Case</Button>
                                 </div>
                             </div>
                         </Panel.Body>
                     </Panel>
+                    <Panel className="">
+                    <Panel.Body>
+                        <div className="row">
+                            <div className="col-xs-9 ptl">
+                                Some other case....
+                            </div>
+                            <div className="col-xs-3" style={{textAlign: "right"}}>
+                                <Button bsStyle="primary" disabled={true}>Start Case</Button>
+                            </div>
+                        </div>
+                    </Panel.Body>
+                    </Panel>
+                    <Panel className="">
+                    <Panel.Body>
+                        <div className="row">
+                            <div className="col-xs-9 ptl">
+                                Another case....
+                            </div>
+                            <div className="col-xs-3" style={{textAlign: "right"}}>
+                                <Button bsStyle="primary" disabled={true}>Start Case</Button>
+                            </div>
+                        </div>
+                    </Panel.Body>
+                    </Panel>
+                    </div>
                 }
             </div>
         </div>

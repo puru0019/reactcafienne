@@ -23,7 +23,7 @@ import isEmpty from '../../utils/isEmpty.js';
 import { filterTasks } from '../../utils/getActiveTab';
 
 const getFinalTabStatus = data => {
-    return data.filter(item => item.currentState === "Completed").length === 5
+    return data.filter(item => item.currentState === "Completed").length === 6
 }
 
 const enhance = compose(
@@ -40,7 +40,6 @@ const enhance = compose(
     }),
     withHandlers({
         handleTab: ({ setActiveTab, activeTab, setTaskDetails, setSpinner }) => async(task, tab) => {
-            console.log(task.id);
             if(activeTab !== tab) {
                 setSpinner(true);
                 setActiveTab(tab);
@@ -61,7 +60,6 @@ const enhance = compose(
     lifecycle({
         async componentDidMount() {
             const response = await axios.get('/api/cases/user?numberOfResults=1');
-            console.log(response);
             this.props.setTasks(filterTasks(response.data._2[0].planitems));
         }
     }),
@@ -84,7 +82,6 @@ const Landing1 = enhance(({
     showSpinner,
     finalTabStatus,
 }) => {
-    console.log(tasks,"get tasks")
     return (
         <div>
          <Row>
@@ -132,7 +129,7 @@ const Landing1 = enhance(({
         </Row>
         <Modal show={showModal} onHide={()=>setModalStatus(false)}>
             <Modal.Header>
-                <Modal.Title>Partner OnBoarding</Modal.Title>
+                <Modal.Title>Welcome to Partner OnBoarding</Modal.Title>
             </Modal.Header>
             <Modal.Body>
                 <Tab.Container id="left-tabs-example" activekey={activeTab} onSelect={(key)=>setActiveTab(key)}>
@@ -150,7 +147,7 @@ const Landing1 = enhance(({
                             }
                             {
                                 tasks && tasks.map((task) => 
-                                task.name === "Finally_Update" &&
+                                task.name === "Final Update" &&
                                 <NavItem key={task.sortOrder} eventKey={task.sortOrder} onClick={() => handleFinalTab(task.sortOrder) } disabled={task.currentState === 'Available'}>
                                     {/* { task.currentState === "Completed" && <Glyphicon glyph="ok" className="custom-complete" />} */}
                                     <label>{task.name}</label>

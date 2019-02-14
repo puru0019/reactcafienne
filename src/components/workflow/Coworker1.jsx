@@ -1,13 +1,7 @@
 import React from 'react';
-import { connect } from 'react-redux';
 import {
     compose,
-    withProps,
-    setDisplayName,
-    withState,
-    withHandlers,
     withPropsOnChange,
-    lifecycle,
     pure,
 } from  'recompose';
 import isEmpty from '../../utils/isEmpty';
@@ -15,51 +9,39 @@ import { Row, Col, Button } from 'reactstrap';
 import { Formik, Field, ErrorMessage, Form } from 'formik';
 import * as Yup from 'yup';
 import axios from 'axios';
+import { manageProps } from './withMangaeProps';
+import { manageLifeCycle } from './manageLifeCycle';
 import { filterTasks } from '../../utils/getActiveTab';
 
 const enhance = compose(
-    withProps(props => {
+    manageProps,
+    withPropsOnChange(['details'], ({ details, mappedProperty }) => {
+        const { id, caseInstanceId } = details;
         return {
-            output: isEmpty(props.taskDetails) ? {} : props.taskDetails.rawOutput,
-            taskId: !isEmpty(props.taskDetails) ? props.taskDetails.id : '',
-            caseId: !isEmpty(props.taskDetails) ? props.taskDetails.caseInstanceId: '',
-            cowerkerDetail: isEmpty(props.coWorkerDetails) ? {} : props.coWorkerDetails, 
-        }
-    }),
-    withPropsOnChange(['output','cowerkerDetail'], ({ output }) => {
-        return {
-            email: isEmpty(output) ? '' : output.MemberEmail.Email,
+            taskId: id ,
+            caseId: caseInstanceId,
+            forminitialValues: isEmpty(details.rawOutput[mappedProperty]) ? '' : details.rawOutput[mappedProperty],
         }
     }),
     pure,
-    lifecycle({
-        async componentDidMount() {
-            this.props.setSpinner(false);
-            if(isEmpty(this.props.taskDetails.assignee)) {
-                const response = await axios.put(`/api/tasks/${this.props.taskId}/claim`, {assignee: ""});
-                if(response) {
-                    const result = await axios.get(`/api/tasks/${this.props.taskId}`);
-                    this.props.setTaskDetails(result.data._2);
-                }
-            }
-        }
-    }),
+    manageLifeCycle,
 );
 
-const Coworker1 = enhance(({ taskDetails, email, taskId, caseId, setTasks, setSpinner}) => {
+const Coworker1 = enhance(({ taskDetails, forminitialValues, taskId, caseId, setTasks, setSpinner}) => {
+    console.log(forminitialValues);
     return (
         <React.Fragment>
             <div>
                 <Formik
                     enableReinitialize
-                    initialValues={{ email }}
+                    initialValues={{ ...forminitialValues }}
                     validationSchema={Yup.object({
-                        email: Yup.string().email('Invalid Email').required('Email is required')
+                        Email: Yup.string().email('Invalid Email').required('Email is required')
                     })}
                     onSubmit= { async(values, actions) =>{
                         const data = {
                             MemberEmail: {
-                                Email: values.email
+                                ...values
                             },
                         };
                         const response = await axios.post(`/api/tasks/${taskId}/complete`, data);
@@ -70,9 +52,10 @@ const Coworker1 = enhance(({ taskDetails, email, taskId, caseId, setTasks, setSp
                         setTimeout(async() =>{
                             const result = await axios.get(`/api/cases/${caseId}`);
                             result && await setTasks(filterTasks(result.data._2.planitems));
+                            document.getElementById("left-tabs-example-tab-3").click()
                             setSpinner(false);
                             actions.setSubmitting(false);
-                        },7000)
+                        },7500)
                     }}
                 >
                 {
@@ -81,8 +64,8 @@ const Coworker1 = enhance(({ taskDetails, email, taskId, caseId, setTasks, setSp
                                 <Row>
                                     <Col sm="11">
                                         <label>Enter Email</label>
-                                        <Field type="email" name="email" placeholder="Email" disabled={taskDetails.planState === "Completed"} className={`form-control ${errors && errors.email && 'error-field'}`} />
-                                        <ErrorMessage name="email">
+                                        <Field type="email" name="Email" placeholder="Enter Email" disabled={taskDetails.planState === "Completed"} className={`form-control ${errors && errors.email && 'error-field'}`} />
+                                        <ErrorMessage name="Email">
                                             {
                                                 msg => <div className="error-message">{msg}</div>
                                             }
